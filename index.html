@@ -4,169 +4,319 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>字球多符計分小幫手</title>
-    <!-- 載入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 載入 Google Material Symbols (用於復原按鈕) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=undo" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
-        /* 使用 Inter 字體以確保視覺效果和 Tailwind 保持一致 */
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            background-color: #f0f5f0; /* Soft, Snowy White Background */
+            background-color: #f0f5f0; 
+            overflow-x: hidden;
+            padding-bottom: 220px;
         }
-        /* 定義杯子的基本樣式 */
+        
+        /* 杯子樣式 */
         .cup {
             width: 70px;
             height: 70px;
-            border-radius: 50%; /* 扁平化/簡約的圓角 */
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 8px;
+            margin: 6px;
             cursor: pointer;
             position: relative;
             user-select: none;
-            transition: all 0.15s ease-in-out;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 扁平化微弱陰影 */
+            transition: all 0.1s ease-in-out;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1); 
             border: 3px solid transparent;
             font-size: 24px;
             font-weight: bold;
             background-color: white;
             color: #333;
+            z-index: 10;
         }
-        .cup:active {
-            transform: scale(0.98); /* 縮小程度減少，更扁平化 */
-            box-shadow: none;
-        }
-        /* 命中計數器的樣式 - 聖誕紅色 */
+        .cup:active { transform: scale(0.92); box-shadow: none; }
+        
         .hit-count {
             position: absolute;
             bottom: -5px;
             right: -5px;
-            background-color: #a00000; /* Deep Christmas Red */
+            background-color: #a00000; 
             color: white;
             font-size: 12px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px; /* 扁平化方形圓角 */
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px; 
             min-width: 24px;
             text-align: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: 1px solid white;
         }
-        /* 邊框顏色 - 配合聖誕配色 */
-        .cup[data-score="100"] { border-color: #ffd700; } /* Gold Accent */
-        .cup[data-id="devil"] { border-color: #006400; } /* Dark Green for Devil */
-        .cup[data-id="bomb"] { border-color: #a00000; } /* Deep Red for Bomb */
-        .cup[data-score="50"] { border-color: #4CAF50; } /* Green */
-        .cup[data-score="30"] { border-color: #ff9800; } /* Orange */
-        .cup[data-score="20"] { border-color: #2196F3; } /* Blue */
-        .cup[data-score="10"] { border-color: #9C27B0; } /* Purple */
 
-        /* 專門為「幺白幺」調整字體，防止換行 */
-        .cup-small-text {
-            font-size: 18px; 
+        .cup[data-score="100"] { border-color: #ffd700; }
+        .cup[data-id="devil"] { border-color: #006400; }
+        .cup[data-id="bomb"] { border-color: #a00000; }
+        .cup[data-score="50"] { border-color: #4CAF50; }
+        .cup[data-score="30"] { border-color: #ff9800; }
+        .cup[data-score="20"] { border-color: #2196F3; }
+        .cup[data-score="10"] { border-color: #9C27B0; }
+        .cup-small-text { font-size: 18px; }
+
+        /* 直式算式區塊 */
+        #calculation-log {
+            position: fixed;
+            top: 80px;
+            right: 10px;
+            width: 280px;
+            max-height: calc(100vh - 320px);
+            overflow-y: auto;
+            pointer-events: none;
+            scrollbar-width: none; 
+            z-index: 5;
+            padding-right: 5px;
         }
-        /* 確保 Material Symbols 在按鈕內居中 */
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        #calculation-log::-webkit-scrollbar { display: none; }
+
+        .log-entry {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background-color: rgba(255,255,255,0.7);
+            backdrop-filter: blur(2px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .log-desc {
+            color: #666;
+            font-size: 15px;
+            margin-right: 12px;
+            text-align: right;
+            flex-grow: 1;
+            line-height: 1.2;
+        }
+        
+        .log-value {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            width: 60px;
+            text-align: right;
+        }
+
+        .strike-through .log-desc {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+        .strike-through .log-value {
+            text-decoration: line-through;
+            color: #9ca3af !important;
+            opacity: 0.6;
+        }
+
+        .text-combo { color: #006400 !important; font-weight: 600; } 
+        .text-bomb { color: #e11d48 !important; font-weight: 600; }
+        .text-bonus { color: #3f5a52 !important; font-weight: 600; }
+
+        /* 佈局 */
+        #cup-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cup-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .row-label {
+            position: absolute;
+            left: 10px;
+            width: 100px;
+            text-align: left;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* 底部工具列 */
+        #bottom-toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            padding: 12px;
+            z-index: 50;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tool-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .bonus-btn {
+            background-color: #e5ebe9;
+            color: #3f5a52;
+            border: 1px solid #c8d3cf;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            white-space: nowrap;
+        }
+        .bonus-btn:hover { background-color: #d1dbd8; transform: translateY(-1px); }
+        .bonus-btn:active { transform: translateY(0); }
+
+        .control-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+            font-weight: 500;
         }
 
-        /* 調整字體大小以適應手機螢幕 */
         @media (max-width: 600px) {
-            .cup {
-                width: 60px;
-                height: 60px;
-                margin: 6px;
-                font-size: 20px;
+            .cup { width: 50px; height: 50px; font-size: 20px; margin: 3px; }
+            .row-label { font-size: 12px; width: 60px; left: 5px; }
+            #calculation-log { 
+                top: 70px; width: 100%; right: 0; padding: 10px; 
+                max-height: 180px; background: none; 
+                pointer-events: none;
             }
-            .cup-small-text {
-                 font-size: 15px; 
-            }
-            .score-title {
-                font-size: 1.5rem;
-            }
-            .score-value {
-                font-size: 3rem;
-            }
+            .log-entry { background-color: rgba(255,255,255,0.9); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            #bottom-toolbar { padding: 10px; padding-bottom: 20px; }
+            .bonus-btn { padding: 6px 10px; font-size: 12px; }
         }
+
+        #rule-pin-button { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .modal { background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-4 flex flex-col items-center min-h-screen">
+<body class="p-4">
 
-    <!-- 調整間距：mb-6 改為 mb-10 -->
-    <div class="text-center">
-        <h1 class="text-3xl font-extrabold score-title mb-2" style="color: #a00000;">字球多符</h1>
-        <p class="text-gray-500 mb-6">計分小幫手</p>
+    <!-- 規則按鈕 -->
+    <button id="rule-pin-button" class="p-3 bg-white text-gray-700 rounded-full hover:bg-gray-100 transition shadow-lg border border-gray-100">
+        <span class="material-symbols-outlined" style="color: #a00000;">attach_file</span>
+    </button>
+    
+    <!-- 規則 Modal -->
+    <div id="rule-modal" class="modal fixed inset-0 hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 border-t-4 border-[#a00000] m-auto relative">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-[#006400]">遊戲規則</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="rule-content" class="text-gray-700 space-y-3 max-h-96 overflow-y-auto text-sm">
+                
+                    <h3>你是一位<strong>煉字術師</strong>，除了要精準的在X球內盡可能投進愈多部件、利用部件組字，還必須滿足客戶的需求⋯⋯</h3>
+                    <h3>請各位<strong>字球多符！</strong></h3>
+                <p class="font-semibold text-[#a00000]">遊戲流程</p>
+                            
+                <ul class="list-disc pl-2 space-y-1">
+                <h3>1. 開始投球<br>2. 投完一半球數後，抽取一張客戶意見卡<br>3. 依照客戶意見，投完剩下的球<br>4. 利用投進的部件，在小白板上組成字<br>5. 結算分數</h3></ul>
+                <p class="font-semibold text-[#a00000]">計分規則</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>每排分數如左側標示。</li>
+                    <li>😈 <strong>惡魔</strong>
+                        <ul class="pl-4 mt-1 border-l-2 border-red-100">
+                                <li>分數 -30</li>
+                                <li>與炸彈組合成 +200，移除懲罰效果</li>
+                            </ul>
+                    <li>💣 <strong>炸彈</strong>
+                        <ul class="pl-4 mt-1 border-l-2 border-red-100">
+                            <li>將最高分扣除</li>
+                            <li>與惡魔組合成 +200，移除懲罰效果</li>
+                        
+                        </ul>
+                    </li>
+                    <li>🔠 <strong>組字</strong>
+                        <ul class="pl-4 mt-1 border-l-2 border-red-100">
+                            <li>用到 2 部件 +100</li>
+                            <li>用到 3 部件 +150</li>
+                            <li>用到 4 部件以上 +200</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <!-- 杯子陣列 - 扁平化設計 -->
-    <div id="cup-container" class="flex flex-col items-center p-4 bg-white shadow-lg rounded-2xl border border-gray-100">
-        <!-- Cups will be rendered here by JavaScript -->
+    <!-- 標題 -->
+    <div class="text-center mb-6 mt-2">
+        <h1 class="text-4xl font-extrabold tracking-tight text-[#a00000]mb-2">字球多符</h1>
+        <p class="text-gray-500 font-medium">計分小幫手</p>
     </div>
 
-    <!-- 分數顯示區 - 簡約設計 -->
-    <div class="mt-8 w-full max-w-xl bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-        <div class="flex items-center justify-between mb-4">
-            <p class="text-2xl font-semibold text-gray-700 score-title">目前得分：</p>
-            <!-- 分數顏色：正分綠，負分紅 -->
-            <span id="total-score" class="text-6xl font-black score-value" style="color: #a00000;">0</span>
+    <!-- 直式算式 -->
+    <div id="calculation-log"></div>
+
+    <!-- 杯子區域 -->
+    <div id="cup-container"></div>
+
+    <!-- 底部工具列 -->
+    <div id="bottom-toolbar">
+        <div class="flex justify-between items-center px-4 w-full max-w-2xl mx-auto border-b border-gray-100 pb-2 mb-1">
+            <span class="text-gray-500 font-semibold">目前分數</span>
+            <span id="total-score-display" class="text-4xl font-black text-[#a00000]">0</span>
         </div>
-        <div class="mb-4">
-            <p class="text-sm font-medium text-gray-500 mb-1">計分明細：</p>
-            <p id="score-details" class="text-lg text-gray-800 font-mono min-h-6">0</p>
+
+        <div class="tool-row">
+            <button class="bonus-btn" onclick="addBonus(100, '2部件')">組字(2部件)+100</button>
+            <button class="bonus-btn" onclick="addBonus(150, '3部件')">組字(3部件)+150 </button>
+            <button class="bonus-btn" onclick="addBonus(200, '4+部件')">組字(4+部件)+200</button>
         </div>
-        
-        <!-- 控制按鈕 (清除與復原) - 扁平化按鈕 -->
-        <div class="flex justify-end space-x-4 pt-4 border-t border-gray-100 mt-4">
-            <!-- 復原按鈕 (Undo) - 簡約灰色 -->
-            <button id="undo-button" disabled class="p-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition duration-150 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center" title="復原上一步">
-                <span class="material-symbols-outlined">undo</span>
+
+        <div class="tool-row mt-1">
+            <button id="undo-button" disabled class="control-btn bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50">
+                <span class="material-symbols-outlined mr-1">undo</span> 復原
             </button>
-
-            <!-- 清除按鈕 (Reset) - 聖誕紅色 -->
-            <button id="clear-button" disabled class="p-3 text-white rounded-lg hover:bg-red-700 transition duration-150 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center" style="background-color: #a00000;" title="清除所有分數">
-                <!-- Icon: Trash/Reset -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+            <button id="clear-button" disabled class="control-btn bg-[#a00000] text-white hover:bg-[#800000] disabled:opacity-50">
+                <span class="material-symbols-outlined mr-1">delete</span> 重置
             </button>
         </div>
     </div>
-
-    <!-- <div class="mt-8 text-center text-sm text-gray-400">
-        <h3 class="font-semibold text-gray-600 mb-1">特殊規則：惡魔與炸彈 (😈/💣)</h3>
-        <ul class="list-disc list-inside space-y-1 mt-2 text-left inline-block">
-            <li>**D=0**: 炸彈扣除 N 個最高分的杯子分數 (N = B 次數)。</li>
-            <li>**D>0**: 惡魔組合給予 +200 分/對。超額炸彈會先扣除組合分 200，之後的再扣除最高分的杯子分數。</li>
-            <li>所有炸彈扣分不會使**分數低於零**。</li>
-        </ul>
-    </div> -->
 
     <script>
-        // 核心數據結構與 DOM 引用
         const initialCupData = [
-            // Row 1 (+100)
             { id: 'star', content: '⭐', baseScore: 100, special: 'SCORABLE', row: 1 },
-            // Row 2 (-30, Deduct Highest) - 惡魔和炸彈BaseScore都設為0，以便獨立處理其複雜規則
-            { id: 'devil', content: '😈', baseScore: 0, special: 'DEVIL', row: 2 }, 
+            { id: 'devil', content: '😈', baseScore: -30, special: 'DEVIL', row: 2 }, 
             { id: 'bomb', content: '💣', baseScore: 0, special: 'BOMB', row: 2 }, 
-            // Row 3 (+50)
             { id: 'ji', content: '即', baseScore: 50, special: 'SCORABLE', row: 3 },
             { id: 'zhi', content: '幺白幺', baseScore: 50, special: 'SCORABLE', row: 3, classes: 'cup-small-text' }, 
             { id: 'feng', content: '豊', baseScore: 50, special: 'SCORABLE', row: 3 },    
-            // Row 4 (+30)
             { id: 'yang', content: '夬', baseScore: 30, special: 'SCORABLE', row: 4 },    
             { id: 'ren', content: '壬', baseScore: 30, special: 'SCORABLE', row: 4 },
             { id: 'yan', content: '延', baseScore: 30, special: 'SCORABLE', row: 4 },
             { id: 'wu', content: '勿', baseScore: 30, special: 'SCORABLE', row: 4 },
-            // Row 5 (+20)
             { id: 'niu', content: '牛', baseScore: 20, special: 'SCORABLE', row: 5 },
             { id: 'zhu', content: '竹', baseScore: 20, special: 'SCORABLE', row: 5 },
             { id: 'er', content: '耳', baseScore: 20, special: 'SCORABLE', row: 5 },
-            // Row 6 (+10)
             { id: 'mu', content: '木', baseScore: 10, special: 'SCORABLE', row: 6 },
             { id: 'kou', content: '口', baseScore: 10, special: 'SCORABLE', row: 6 },
             { id: 'xin', content: '心', baseScore: 10, special: 'SCORABLE', row: 6 },
@@ -174,283 +324,259 @@
             { id: 'shi', content: '示', baseScore: 10, special: 'SCORABLE', row: 6 },
         ];
 
-        let cupsState = [];
+        const rowLabels = {
+            1: '100',
+            2: '-30 / 扣最高', 
+            3: '50',
+            4: '30',
+            5: '20',
+            6: '10'
+        };
+
         let history = []; 
-        const cupLayoutByRow = {};
-        
+        let actionLog = []; 
         const cupContainer = document.getElementById('cup-container');
-        const totalScoreEl = document.getElementById('total-score');
-        const scoreDetailsEl = document.getElementById('score-details');
+        const calcLogEl = document.getElementById('calculation-log');
+        const totalScoreDisplay = document.getElementById('total-score-display');
 
-
-        // --- 輔助函數群 (置頂以確保作用域正確) ---
-
-        // 確保分數不低於零
-        function safeDeduct(currentScore, deductionAmount) {
-            const finalScore = currentScore - deductionAmount;
-            return Math.max(0, finalScore);
-        }
-
-        // 靜態佈局設置
-        function setupInitialLayout() {
-            initialCupData.forEach(cup => {
-                if (!cupLayoutByRow[cup.row]) { cupLayoutByRow[cup.row] = []; }
-                cupLayoutByRow[cup.row].push(cup);
-            });
-        }
-
-        // 儲存歷史狀態
+        // --- 狀態管理 ---
         function saveHistory() {
-            const currentStateClone = cupsState.map(cup => ({ ...cup }));
-            history.push(currentStateClone);
-            if (history.length > 15) { history.shift(); }
+            const logClone = JSON.parse(JSON.stringify(actionLog));
+            history.push(logClone);
+            if (history.length > 20) { history.shift(); }
+            updateControlButtons();
         }
         
-        // 復原上一步
         function undoLastAction() {
             if (history.length > 0) {
-                const previousState = history.pop();
-                cupsState = previousState;
-                
-                renderCups();
-                updateDisplay();
-                updateControlButtons(); 
+                actionLog = history.pop();
+                render();
             }
+            updateControlButtons();
         }
 
-        // 更新控制按鈕狀態
         function updateControlButtons() {
-            const undoButton = document.getElementById('undo-button');
-            const clearButton = document.getElementById('clear-button');
-            const canUndo = history.length > 0;
-            if (undoButton) {
-                undoButton.disabled = !canUndo;
-                undoButton.classList.toggle('opacity-50', !canUndo);
-                undoButton.classList.toggle('cursor-not-allowed', !canUndo);
-            }
-            const hasHits = cupsState.some(cup => cup.hits > 0);
-            if (clearButton) {
-                clearButton.disabled = !hasHits;
-                clearButton.classList.toggle('opacity-50', !hasHits);
-                clearButton.classList.toggle('cursor-not-allowed', !hasHits);
-            }
+            document.getElementById('undo-button').disabled = history.length === 0;
+            document.getElementById('clear-button').disabled = actionLog.length === 0;
         }
-        
-        // 初始化與重置狀態
+
         function initializeState() {
-            cupsState = initialCupData.map(cup => ({ ...cup, hits: 0 }));
             history = []; 
-            renderCups();
-            updateDisplay();
-            updateControlButtons(); 
+            actionLog = []; 
+            render();
         }
 
-        // 渲染杯子
-        function renderCups() {
-            cupContainer.innerHTML = ''; 
-            Object.keys(cupLayoutByRow).sort((a, b) => parseInt(a) - parseInt(b)).forEach(rowKey => {
-                const row = cupLayoutByRow[rowKey];
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'flex justify-center'; 
-                row.forEach(cupDefinition => {
-                    const currentState = cupsState.find(c => c.id === cupDefinition.id);
-                    const hits = currentState ? currentState.hits : 0;
-                    const cupDiv = document.createElement('div');
-                    cupDiv.className = 'cup';
-                    cupDiv.dataset.id = cupDefinition.id;
-                    cupDiv.dataset.score = cupDefinition.baseScore;
-                    cupDiv.dataset.special = cupDefinition.special;
-                    if (cupDefinition.classes) { cupDiv.classList.add(cupDefinition.classes); }
-                    cupDiv.onclick = () => handleClick(cupDefinition.id);
-                    cupDiv.innerHTML = `
-                        <span>${cupDefinition.content}</span>
-                        ${hits > 0 ? `<span class="hit-count">×${hits}</span>` : ''}
-                    `;
-                    rowDiv.appendChild(cupDiv);
-                });
-                cupContainer.appendChild(rowDiv);
-            });
-        }
-        
-        // --- 點擊事件處理 ---
-        function handleClick(cupId) {
+        function handleCupClick(cupId) {
             saveHistory();
-
-            const cup = cupsState.find(c => c.id === cupId);
-            if (cup) {
-                cup.hits += 1;
-                renderCups(); 
-                updateDisplay(); 
-                updateControlButtons(); 
-            }
+            actionLog.push({ type: 'cup', id: cupId });
+            render();
         }
 
+        window.addBonus = function(points, label) {
+            saveHistory();
+            actionLog.push({ type: 'bonus', value: points, label: label });
+            render();
+        }
 
-        /**
-         * 核心分數計算邏輯 - 實現兩種獨立的炸彈懲罰模式
-         */
-        function calculateScore() {
-            let baseScoreTotal = 0; // SCORABLE 杯子的分數總和
-            let breakdownParts = [];
-            
-            // 1. 取得 D/B 次數
-            const devilCup = cupsState.find(c => c.id === 'devil');
-            const bombCup = cupsState.find(c => c.id === 'bomb');
-            const D = devilCup ? devilCup.hits : 0;
-            const B = bombCup ? bombCup.hits : 0;
-            
-            let comboScore = 0;
-            let excessDemonPenalty = 0;
-            
-            // 收集所有 SCORABLE 正分項目的單獨分數 (用於扣除)
-            let deductibleScores = []; 
+        function render() {
+            renderCups();
+            calculateAndRenderLog();
+            updateControlButtons();
+        }
 
-            // 2. 計算所有【SCORABLE】杯子的基本分數，並收集可扣除項目 (正分)
-            cupsState.forEach(cup => {
-                if (cup.special === 'SCORABLE' && cup.hits > 0) {
-                    const score = cup.baseScore * cup.hits;
-                    baseScoreTotal += score;
+        function renderCups() {
+            cupContainer.innerHTML = '';
+            const hitCounts = {};
+            actionLog.forEach(action => {
+                if(action.type === 'cup') hitCounts[action.id] = (hitCounts[action.id] || 0) + 1;
+            });
+
+            const cupsByRow = {};
+            initialCupData.forEach(c => {
+                if(!cupsByRow[c.row]) cupsByRow[c.row] = [];
+                cupsByRow[c.row].push(c);
+            });
+
+            Object.keys(cupsByRow).sort((a,b) => a-b).forEach(rowKey => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'cup-row';
+                
+                const labelEl = document.createElement('div');
+                labelEl.className = 'row-label';
+                labelEl.textContent = rowLabels[rowKey] || '';
+                rowEl.appendChild(labelEl);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex justify-center items-center gap-1';
+                
+                cupsByRow[rowKey].forEach(cupDef => {
+                    const hits = hitCounts[cupDef.id] || 0;
+                    const cupEl = document.createElement('div');
+                    cupEl.className = 'cup';
+                    cupEl.dataset.id = cupDef.id;
+                    cupEl.dataset.score = cupDef.baseScore;
+                    if(cupDef.classes) cupEl.classList.add(cupDef.classes);
                     
-                    const sign = cup.baseScore >= 0 ? '+' : '';
-                    breakdownParts.push(`${sign}${cup.baseScore}×${cup.hits}`);
+                    cupEl.innerHTML = `
+                        ${cupDef.content}
+                        ${hits > 0 ? `<span class="hit-count">${hits}</span>` : ''}
+                    `;
+                    cupEl.onclick = () => handleCupClick(cupDef.id);
+                    wrapper.appendChild(cupEl);
+                });
+                rowEl.appendChild(wrapper);
+                cupContainer.appendChild(rowEl);
+            });
+        }
 
-                    if (cup.baseScore > 0) {
-                        for (let i = 0; i < cup.hits; i++) {
-                            deductibleScores.push(cup.baseScore);
-                        }
+        // --- 核心運算：全域狀態運算邏輯 ---
+        function calculateAndRenderLog() {
+            let displayItems = []; 
+            
+            let devilIndices = [];
+            let bombIndices = [];
+            
+            actionLog.forEach((action, idx) => {
+                let item = {
+                    logIdx: idx,
+                    type: action.type,
+                    desc: '',
+                    value: 0,
+                    isCancelled: false, 
+                    isCombo: false, 
+                    isBombDeduction: false
+                };
+
+                if (action.type === 'cup') {
+                    const cup = initialCupData.find(c => c.id === action.id);
+                    if (cup.id === 'devil') {
+                        item.desc = `😈 (-30)`;
+                        item.value = -30;
+                        devilIndices.push(idx);
+                    } else if (cup.id === 'bomb') {
+                        item.desc = `💣 待定`; 
+                        item.value = 0;
+                        bombIndices.push(idx);
+                    } else {
+                        item.desc = `${cup.content} (${cup.baseScore})`;
+                        item.value = cup.baseScore;
                     }
+                } else if (action.type === 'bonus') {
+                    item.desc = `🔠 ${action.label} (${action.value})`;
+                    item.value = action.value;
+                }
+                displayItems.push(item);
+            });
+
+            // 2. 處理組合 (不論順序)
+            const comboCount = Math.min(devilIndices.length, bombIndices.length);
+            for (let i = 0; i < comboCount; i++) {
+                const dIdx = devilIndices[i];
+                const bIdx = bombIndices[i];
+                displayItems[dIdx].isCancelled = true;
+                displayItems[bIdx].value = 200;
+                displayItems[bIdx].desc = `😈+💣 組合`;
+                displayItems[bIdx].isCombo = true;
+            }
+
+            // 3. 處理剩餘炸彈的扣分邏輯
+            const excessBombCount = bombIndices.length - comboCount;
+            const excessBombIndices = bombIndices.slice(comboCount);
+
+            excessBombIndices.forEach(bLogIdx => {
+                // 找出候選人：未被劃掉、分數大於0、且不是加分按鈕
+                let candidates = displayItems.filter(item => 
+                    !item.isCancelled && 
+                    item.value > 0 && 
+                    item.type !== 'bonus' // 修正：組字分數不受炸彈影響
+                );
+                
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => b.value - a.value);
+                    const target = candidates[0];
+                    target.isCancelled = true;
+                    
+                    let targetName = target.desc.split(' ')[0]; 
+                    if (target.isCombo) targetName = "組合分";
+                    
+                    displayItems[bLogIdx].desc = `💣 抵銷 ${targetName}`;
+                    displayItems[bLogIdx].isBombDeduction = true;
+                } else {
+                    displayItems[bLogIdx].desc = `💣 (無分可扣)`;
                 }
             });
-            
-            // 3. 處理 D/B 狀態
-            let totalScore = baseScoreTotal; // 預設分數為 SCORABLE 總和
 
-            if (B > 0) {
-                breakdownParts.push(`💣×${B}`);
-            }
-            
-            if (D === 0 && B > 0) {
-                // --- 模式 A: 惡魔不在場 (D=0, B>0) - 扣除最高分懲罰 ---
-                
-                if (deductibleScores.length > 0) {
-                    deductibleScores.sort((a, b) => b - a);
-                    
-                    let deductionAmount = 0;
-                    const timesToDeduct = Math.min(B, deductibleScores.length);
-                    
-                    for (let i = 0; i < timesToDeduct; i++) {
-                        deductionAmount += deductibleScores[i];
-                    }
-                    
-                    // 從總分中安全扣除，確保 >= 0
-                    totalScore = safeDeduct(totalScore, deductionAmount);
-                    
-                    if (deductionAmount > 0) {
-                        // 簡化明細呈現
-                        breakdownParts.length = 0; 
-                        breakdownParts.push(`SCORABLE 總分: ${baseScoreTotal}`);
-                        breakdownParts.push(`(-${deductionAmount}) [💣${B} 扣除前 ${timesToDeduct} 高分]`);
-                    }
-                }
+            // 4. 計算總分 & 渲染
+            let total = 0;
+            displayItems.forEach(item => {
+                if (!item.isCancelled) total += item.value;
+            });
+            // 修正：移除了 Math.max(0, total)，允許負分顯示
 
-            } else if (D > 0) {
-                // --- 模式 B: 惡魔在場 (D>0) - 組合獎勵與組合懲罰 ---
+            // 渲染
+            calcLogEl.innerHTML = '';
+            const renderList = [...displayItems].reverse();
 
-                const comboCount = Math.min(D, B); 
-                const excessBombCount = B - D;
-                const excessDemonCount = D - B;
-                let deductionSummary = [];
-
-                // 1. 組合獎勵
-                if (comboCount > 0) {
-                    comboScore = comboCount * 200;
-                    totalScore += comboScore;
-                    breakdownParts.push(`(+${comboScore}) [😈${comboCount}+💣${comboCount} 組合獎勵]`);
-                }
-
-                // 2. 超額惡魔懲罰 (D > B)
-                if (excessDemonCount > 0) {
-                    excessDemonPenalty = excessDemonCount * (-30); 
-                    totalScore += excessDemonPenalty;
-                    breakdownParts.push(`(${excessDemonPenalty}) [😈${excessDemonCount} 超額懲罰]`);
-                }
-
-                // 3. 超額炸彈懲罰 (B > D) - 兩階段扣除
-                let bombsRemainingToDeduct = excessBombCount;
-                
-                if (bombsRemainingToDeduct >= 1) {
-                    // 階段 1: 第一顆超額炸彈扣除 200 分 (組合分)
-                    const deduction1 = 200; 
-                    const actualDeduction1 = Math.min(deduction1, totalScore);
-                    totalScore = safeDeduct(totalScore, deduction1);
-                    bombsRemainingToDeduct--;
-                    deductionSummary.push(`(-${actualDeduction1}) [💣1 抵銷組合分]`);
-                }
-
-                if (bombsRemainingToDeduct >= 1 && deductibleScores.length > 0) {
-                    // 階段 2: 剩餘的超額炸彈扣除最高分的杯子分數
-                    deductibleScores.sort((a, b) => b - a);
-                    
-                    for (let i = 0; i < bombsRemainingToDeduct && i < deductibleScores.length; i++) {
-                        const deduction2 = deductibleScores[i];
-                        const actualDeduction2 = Math.min(deduction2, totalScore);
-                        totalScore = safeDeduct(totalScore, deduction2);
-                        bombsRemainingToDeduct--;
-                        deductionSummary.push(`(-${actualDeduction2}) [💣 額外扣除最高分]`);
-                    }
-                }
-                
-                // 將炸彈懲罰明細加入總明細中
-                breakdownParts.push(...deductionSummary);
-
-            } else if (D > 0 && B === 0) {
-                 // 只有惡魔，沒有炸彈
-                 excessDemonPenalty = D * (-30);
-                 totalScore = safeDeduct(totalScore, excessDemonPenalty * -1); // 扣除負分
-                 breakdownParts.push(`(${excessDemonPenalty}) [😈${D} 單獨懲罰]`);
-            }
-            
-            // 4. 格式化分數明細
-            if (breakdownParts.length === 0) {
-                breakdownParts.push('0');
-            }
-            const detailsText = breakdownParts.join(' + ');
-
-            return { totalScore, detailsText };
-        }
-
-        // --- UI 渲染與控制函數 (保持不變) ---
-        function updateDisplay() {
-            const { totalScore, detailsText } = calculateScore();
-            totalScoreEl.textContent = totalScore.toLocaleString();
-            scoreDetailsEl.textContent = detailsText;
-            
-            // 聖誕配色：正分綠，負分紅
-            if (totalScore > 0) {
-                totalScoreEl.style.color = '#006400'; /* Forest Green */
-                totalScoreEl.classList.remove('text-gray-500');
-            } else if (totalScore < 0) {
-                totalScoreEl.style.color = '#a00000'; /* Deep Red */
-                totalScoreEl.classList.remove('text-gray-500');
+            if (renderList.length === 0) {
+                calcLogEl.innerHTML = '<div class="text-center text-gray-400 mt-10">尚無紀錄</div>';
             } else {
-                totalScoreEl.style.color = '#a00000'; /* 0 分使用紅色 */
+                renderList.forEach(item => {
+                    const row = document.createElement('div');
+                    let classes = 'log-entry';
+                    if (item.isCancelled) classes += ' strike-through';
+                    
+                    let descHtml = item.desc;
+                    if (item.isCombo && !item.isCancelled) descHtml = `<span class="text-combo">${item.desc}</span>`;
+                    if (item.isBombDeduction) descHtml = `<span class="text-bomb">${item.desc}</span>`;
+                    if (item.type === 'bonus') descHtml = `<span class="text-bonus">${item.desc}</span>`;
+
+                    let valHtml = '';
+                    if (item.value !== 0 && !item.isBombDeduction) {
+                        valHtml = item.value;
+                    }
+
+                    row.className = classes;
+                    row.innerHTML = `
+                        <span class="log-desc">${descHtml}</span>
+                        <span class="log-value">${valHtml}</span>
+                    `;
+                    calcLogEl.appendChild(row);
+                });
             }
+
+            // 更新總分
+            totalScoreDisplay.textContent = total;
+            if(total > 0) totalScoreDisplay.style.color = '#006400';
+            else totalScoreDisplay.style.color = '#a00000';
         }
 
-        // --- 主程式進入點 ---
         window.onload = () => {
-            setupInitialLayout();
             initializeState();
             
-            const clearButton = document.getElementById('clear-button');
-            const undoButton = document.getElementById('undo-button');
-            
-            clearButton.addEventListener('click', () => {
-                if (cupsState.some(cup => cup.hits > 0)) { saveHistory(); }
-                initializeState();
-            });
+            const modal = document.getElementById('rule-modal');
+            document.getElementById('rule-pin-button').onclick = () => {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex';
+            };
+            document.getElementById('close-modal').onclick = () => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            };
+            modal.onclick = (e) => { 
+                if(e.target === modal) {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                }
+            };
 
-            undoButton.addEventListener('click', undoLastAction);
+            document.getElementById('clear-button').onclick = () => {
+                if(actionLog.length > 0) {
+                    saveHistory(); 
+                    actionLog = [];
+                    render();
+                }
+            };
+            document.getElementById('undo-button').onclick = undoLastAction;
         };
     </script>
 </body>
