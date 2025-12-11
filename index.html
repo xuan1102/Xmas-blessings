@@ -9,9 +9,9 @@
     <style>
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            background-color: #f0f5f0; 
+            background-color: #044200; 
             overflow-x: hidden;
-            padding-bottom: 220px;
+            padding-bottom: 260px; 
         }
         
         /* 杯子樣式 */
@@ -27,7 +27,7 @@
             position: relative;
             user-select: none;
             transition: all 0.1s ease-in-out;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1); 
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); 
             border: 3px solid transparent;
             font-size: 24px;
             font-weight: bold;
@@ -37,6 +37,7 @@
         }
         .cup:active { transform: scale(0.92); box-shadow: none; }
         
+        /* 通用計數小紅點樣式 */
         .hit-count {
             position: absolute;
             bottom: -5px;
@@ -49,17 +50,19 @@
             border-radius: 10px; 
             min-width: 24px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            border: 1px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 2px solid white;
+            z-index: 20;
         }
 
-        .cup[data-score="100"] { border-color: #ffd700; }
+        /* 特定杯子樣式 */
+        .cup[data-score="10"] { border-color: #ffd700; }
         .cup[data-id="devil"] { border-color: #006400; }
         .cup[data-id="bomb"] { border-color: #a00000; }
-        .cup[data-score="50"] { border-color: #4CAF50; }
-        .cup[data-score="30"] { border-color: #ff9800; }
-        .cup[data-score="20"] { border-color: #2196F3; }
-        .cup[data-score="10"] { border-color: #9C27B0; }
+        .cup[data-score="5"] { border-color: #4CAF50; }
+        .cup[data-score="3"] { border-color: #ff9800; }
+        .cup[data-score="2"] { border-color: #2196F3; }
+        .cup[data-score="1"] { border-color: #9C27B0; }
         .cup-small-text { font-size: 18px; }
 
         /* 直式算式區塊 */
@@ -67,13 +70,16 @@
             position: fixed;
             top: 80px;
             right: 10px;
-            width: 280px;
-            max-height: calc(100vh - 320px);
+            width: 220px; /* 修改：縮短寬度 (原本260px) */
+            max-height: calc(100vh - 400px);
             overflow-y: auto;
             pointer-events: none;
             scrollbar-width: none; 
             z-index: 5;
             padding-right: 5px;
+            /* 讓內容從底部開始堆疊的視覺效果 */
+            display: flex;
+            flex-direction: column;
         }
         #calculation-log::-webkit-scrollbar { display: none; }
 
@@ -83,43 +89,49 @@
             align-items: center;
             margin-bottom: 6px;
             padding: 6px 10px;
-            border-radius: 6px;
-            background-color: rgba(255,255,255,0.7);
+            border-radius: 8px; /* 稍微圓一點 */
+            /* 修改：背景更透明 */
+            background-color: rgba(255, 255, 255, 0.4); 
             backdrop-filter: blur(2px);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: auto; /* 輔助底部對齊 */
         }
         
         .log-desc {
-            color: #666;
+            color: #e5e7eb; /* 修改：因為背景變透明深色，文字改淺色一點比較清楚，或者保持深色看對比 */
+            color: #0f390f; /* 保持深綠色系文字，但在淺白背景上 */
             font-size: 15px;
-            margin-right: 12px;
+            margin-right: 8px;
             text-align: right;
             flex-grow: 1;
             line-height: 1.2;
+            font-weight: 700;
         }
         
         .log-value {
             font-family: 'Courier New', monospace;
             font-size: 18px;
-            font-weight: 700;
-            color: #333;
-            width: 60px;
+            font-weight: 800;
+            color: #000;
+            width: 40px;
             text-align: right;
         }
 
         .strike-through .log-desc {
             text-decoration: line-through;
-            color: #9ca3af;
+            color: #4b5563; /* 深灰 */
+            opacity: 0.7;
         }
         .strike-through .log-value {
             text-decoration: line-through;
-            color: #9ca3af !important;
+            color: #4b5563 !important;
             opacity: 0.6;
         }
 
-        .text-combo { color: #006400 !important; font-weight: 600; } 
-        .text-bomb { color: #e11d48 !important; font-weight: 600; }
-        .text-bonus { color: #3f5a52 !important; font-weight: 600; }
+        .text-combo { color: #006400 !important; font-weight: 800; text-shadow: 0 0 2px rgba(255,255,255,0.5); } 
+        .text-bomb { color: #991b1b !important; font-weight: 800; }
+        .text-bonus { color: #5c3a21 !important; font-weight: 800; }
 
         /* 佈局 */
         #cup-container {
@@ -129,6 +141,7 @@
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
+            padding-bottom: 10px;
         }
 
         .cup-row {
@@ -137,19 +150,49 @@
             align-items: center;
             width: 100%;
             position: relative;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .row-label {
             position: absolute;
             left: 10px;
-            width: 100px;
+            width: 110px;
             text-align: left;
-            color: #6b7280;
-            font-weight: 600;
-            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            font-weight: 800;
+            font-size: 20px;
             white-space: nowrap;
         }
+
+        /* 樹幹按鈕區域 */
+        #trunk-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            margin-bottom: 100px; 
+        }
+        
+        /* 樹幹按鈕樣式 */
+        .trunk-btn {
+            background-color: #8B5A2B;
+            color: #fff;
+            border: 3px solid #6d421b;
+            width: 140px; 
+            height: 70px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            border-radius: 8px; 
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .trunk-btn:active { transform: scale(0.95); }
+        .trunk-btn:hover { background-color: #7a4e25; }
 
         /* 底部工具列 */
         #bottom-toolbar {
@@ -157,65 +200,65 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            padding: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
+            padding: 20px 20px 35px 20px;
             z-index: 50;
-            border-top: 1px solid #e5e7eb;
+            border-top: 6px solid #a00000;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 16px;
         }
-
-        .tool-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .bonus-btn {
-            background-color: #e5ebe9;
-            color: #3f5a52;
-            border: 1px solid #c8d3cf;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            white-space: nowrap;
-        }
-        .bonus-btn:hover { background-color: #d1dbd8; transform: translateY(-1px); }
-        .bonus-btn:active { transform: translateY(0); }
 
         .control-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-            font-weight: 500;
+            font-weight: 700;
+            font-size: 16px;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            height: 50px;
+        }
+        .control-btn:hover { background-color: #e5e7eb; }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .control-btn-red {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .control-btn-red:hover { background-color: #fecaca; }
+        .control-btn-red:disabled { background-color: #f3f4f6; color: #9ca3af; }
+
+        /* 通用 Modal 樣式 */
+        .modal { 
+            background-color: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(5px); 
+            z-index: 9999; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: fixed;
+            inset: 0;
         }
 
         @media (max-width: 600px) {
             .cup { width: 50px; height: 50px; font-size: 20px; margin: 3px; }
-            .row-label { font-size: 12px; width: 60px; left: 5px; }
+            .row-label { font-size: 16px; width: 70px; left: 5px; } 
             #calculation-log { 
                 top: 70px; width: 100%; right: 0; padding: 10px; 
-                max-height: 180px; background: none; 
+                max-height: 200px; background: none; 
                 pointer-events: none;
             }
-            .log-entry { background-color: rgba(255,255,255,0.9); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-            #bottom-toolbar { padding: 10px; padding-bottom: 20px; }
-            .bonus-btn { padding: 6px 10px; font-size: 12px; }
+            .log-entry { background-color: rgba(255,255,255,0.5); } /* 手機版稍微不透明一點點 */
+            #bottom-toolbar { padding: 20px 20px 40px 20px; }
+            .trunk-btn { width: 120px; height: 60px; font-size: 18px; }
         }
 
         #rule-pin-button { position: fixed; top: 20px; right: 20px; z-index: 1000; }
-        .modal { background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="p-4">
@@ -226,8 +269,8 @@
     </button>
     
     <!-- 規則 Modal -->
-    <div id="rule-modal" class="modal fixed inset-0 hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 border-t-4 border-[#a00000] m-auto relative">
+    <div id="rule-modal" class="modal hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 border-t-4 border-[#a00000] m-auto relative animate-[scale-in_0.2s_ease-out]">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 class="text-xl font-bold text-[#006400]">遊戲規則</h2>
                 <button id="close-modal" class="text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
@@ -245,21 +288,19 @@
                     <li>每排分數如左側標示。</li>
                     <li>😈 <strong>惡魔</strong>
                         <ul class="pl-4 mt-1 border-l-2 border-red-100">
-                                <li>分數 -30</li>
-                                <li>與炸彈組合成 +200，移除懲罰效果</li>
+                                <li>分數 <strong>-3</strong></li>
+                                <li>與炸彈組合成 <strong>+20</strong>，移除懲罰效果</li>
                             </ul>
                     <li>💣 <strong>炸彈</strong>
                         <ul class="pl-4 mt-1 border-l-2 border-red-100">
                             <li>將最高分扣除</li>
-                            <li>與惡魔組合成 +200，移除懲罰效果</li>
+                            <li>與惡魔組合成 <strong>+20</strong>，移除懲罰效果</li>
                         
                         </ul>
                     </li>
                     <li>🔠 <strong>組字</strong>
                         <ul class="pl-4 mt-1 border-l-2 border-red-100">
-                            <li>用到 2 部件 +100</li>
-                            <li>用到 3 部件 +150</li>
-                            <li>用到 4 部件以上 +200</li>
+                            <li><strong>+10</strong> (樹幹按鈕)</li>
                         </ul>
                     </li>
                 </ul>
@@ -267,10 +308,25 @@
         </div>
     </div>
 
+    <!-- 確認清空 Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm mx-4 m-auto text-center">
+            <div class="mb-4">
+                <span class="material-symbols-outlined text-5xl text-red-500 mb-2">warning</span>
+                <h3 class="text-xl font-bold text-gray-800">確定要重置嗎？</h3>
+                <p class="text-gray-500 mt-2">所有的計分紀錄將會消失，無法復原。</p>
+            </div>
+            <div class="flex gap-3 justify-center">
+                <button id="cancel-clear-btn" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 w-full">取消</button>
+                <button id="confirm-clear-btn" class="px-5 py-2.5 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 w-full shadow-lg shadow-red-200">確定清空</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 標題 -->
     <div class="text-center mb-6 mt-2">
-        <h1 class="text-4xl font-extrabold tracking-tight text-[#a00000]mb-4">字球多符</h1>
-        <p class="text-gray-500 font-medium">計分小幫手</p>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg mb-2">字球多符</h1>
+        <p class="text-white/80 font-medium">計分小幫手</p>
     </div>
 
     <!-- 直式算式 -->
@@ -278,72 +334,86 @@
 
     <!-- 杯子區域 -->
     <div id="cup-container"></div>
+    
+    <!-- 樹幹按鈕區域 -->
+    <div id="trunk-container">
+        <!-- JS 動態生成按鈕 -->
+    </div>
 
     <!-- 底部工具列 -->
     <div id="bottom-toolbar">
-        <div class="flex justify-between items-center px-4 w-full max-w-2xl mx-auto border-b border-gray-100 pb-2 mb-1">
-            <span class="text-gray-500 font-semibold">目前分數</span>
-            <span id="total-score-display" class="text-4xl font-black text-[#a00000]">0</span>
+        <!-- 分數與進球數並排 -->
+        <div class="flex items-center justify-between gap-6 px-2">
+            <!-- 進球數 (放大) -->
+            <div class="flex flex-col items-start bg-gray-100 px-5 py-3 rounded-xl border-2 border-gray-200 min-w-[110px]">
+                <span class="text-sm text-gray-500 font-bold uppercase tracking-wider">進球數</span>
+                <span id="total-hits-display" class="text-4xl font-black text-gray-700 mt-1">0</span>
+            </div>
+            
+            <!-- 總分 (放大) -->
+            <div class="flex flex-col items-end flex-grow">
+                <span class="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">目前分數</span>
+                <span id="total-score-display" class="text-6xl font-black text-[#a00000] leading-none">0</span>
+            </div>
         </div>
 
-        <div class="tool-row">
-            <button class="bonus-btn" onclick="addBonus(100, '2部件')">組字(2部件)+100</button>
-            <button class="bonus-btn" onclick="addBonus(150, '3部件')">組字(3部件)+150 </button>
-            <button class="bonus-btn" onclick="addBonus(200, '4+部件')">組字(4+部件)+200</button>
-        </div>
-
-        <div class="tool-row mt-1">
-            <button id="undo-button" disabled class="control-btn bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50">
-                <span class="material-symbols-outlined mr-1">undo</span> 復原
+        <!-- 控制按鈕 -->
+        <div class="flex gap-4 w-full mt-2">
+            <button id="undo-button" disabled class="control-btn flex-1">
+                <span class="material-symbols-outlined mr-2">undo</span> 復原
             </button>
-            <button id="clear-button" disabled class="control-btn bg-[#a00000] text-white hover:bg-[#800000] disabled:opacity-50">
-                <span class="material-symbols-outlined mr-1">delete</span> 重置
+            <button id="clear-button" disabled class="control-btn control-btn-red flex-1">
+                <span class="material-symbols-outlined mr-2">delete</span> 重置
             </button>
         </div>
     </div>
 
     <script>
         const initialCupData = [
-            { id: 'star', content: '⭐', baseScore: 100, special: 'SCORABLE', row: 1 },
-            { id: 'devil', content: '😈', baseScore: -30, special: 'DEVIL', row: 2 }, 
+            { id: 'star', content: '⭐', baseScore: 10, special: 'SCORABLE', row: 1 }, 
+            { id: 'devil', content: '😈', baseScore: -3, special: 'DEVIL', row: 2 },   
             { id: 'bomb', content: '💣', baseScore: 0, special: 'BOMB', row: 2 }, 
-            { id: 'ji', content: '即', baseScore: 50, special: 'SCORABLE', row: 3 },
-            { id: 'zhi', content: '幺白幺', baseScore: 50, special: 'SCORABLE', row: 3, classes: 'cup-small-text' }, 
-            { id: 'feng', content: '豊', baseScore: 50, special: 'SCORABLE', row: 3 },    
-            { id: 'yang', content: '夬', baseScore: 30, special: 'SCORABLE', row: 4 },    
-            { id: 'ren', content: '壬', baseScore: 30, special: 'SCORABLE', row: 4 },
-            { id: 'yan', content: '延', baseScore: 30, special: 'SCORABLE', row: 4 },
-            { id: 'wu', content: '勿', baseScore: 30, special: 'SCORABLE', row: 4 },
-            { id: 'niu', content: '牛', baseScore: 20, special: 'SCORABLE', row: 5 },
-            { id: 'zhu', content: '竹', baseScore: 20, special: 'SCORABLE', row: 5 },
-            { id: 'er', content: '耳', baseScore: 20, special: 'SCORABLE', row: 5 },
-            { id: 'mu', content: '木', baseScore: 10, special: 'SCORABLE', row: 6 },
-            { id: 'kou', content: '口', baseScore: 10, special: 'SCORABLE', row: 6 },
-            { id: 'xin', content: '心', baseScore: 10, special: 'SCORABLE', row: 6 },
-            { id: 'yan2', content: '言', baseScore: 10, special: 'SCORABLE', row: 6 },
-            { id: 'shi', content: '示', baseScore: 10, special: 'SCORABLE', row: 6 },
+            { id: 'ji', content: '即', baseScore: 5, special: 'SCORABLE', row: 3 },    
+            { id: 'zhi', content: '幺白幺', baseScore: 5, special: 'SCORABLE', row: 3, classes: 'cup-small-text' }, 
+            { id: 'feng', content: '豊', baseScore: 5, special: 'SCORABLE', row: 3 },    
+            { id: 'yang', content: '夬', baseScore: 3, special: 'SCORABLE', row: 4 },   
+            { id: 'ren', content: '壬', baseScore: 3, special: 'SCORABLE', row: 4 },
+            { id: 'yan', content: '延', baseScore: 3, special: 'SCORABLE', row: 4 },
+            { id: 'wu', content: '勿', baseScore: 3, special: 'SCORABLE', row: 4 },
+            { id: 'niu', content: '牛', baseScore: 2, special: 'SCORABLE', row: 5 },   
+            { id: 'zhu', content: '竹', baseScore: 2, special: 'SCORABLE', row: 5 },
+            { id: 'er', content: '耳', baseScore: 2, special: 'SCORABLE', row: 5 },
+            { id: 'mu', content: '木', baseScore: 1, special: 'SCORABLE', row: 6 },    
+            { id: 'kou', content: '口', baseScore: 1, special: 'SCORABLE', row: 6 },
+            { id: 'xin', content: '心', baseScore: 1, special: 'SCORABLE', row: 6 },
+            { id: 'yan2', content: '言', baseScore: 1, special: 'SCORABLE', row: 6 },
+            { id: 'shi', content: '示', baseScore: 1, special: 'SCORABLE', row: 6 },
         ];
 
         const rowLabels = {
-            1: '100',
-            2: '-30 / 扣最高', 
-            3: '50',
-            4: '30',
-            5: '20',
-            6: '10'
+            1: '10',
+            2: '-3 / 扣最高', 
+            3: '5',
+            4: '3',
+            5: '2',
+            6: '1'
         };
+
+        const trunkConfig = { id: 'bonus_trunk', points: 10, label: '組字', text: '組字 +10' };
 
         let history = []; 
         let actionLog = []; 
         const cupContainer = document.getElementById('cup-container');
         const calcLogEl = document.getElementById('calculation-log');
         const totalScoreDisplay = document.getElementById('total-score-display');
+        const totalHitsDisplay = document.getElementById('total-hits-display');
+        const trunkContainer = document.getElementById('trunk-container');
 
         // --- 狀態管理 ---
         function saveHistory() {
             const logClone = JSON.parse(JSON.stringify(actionLog));
             history.push(logClone);
-            if (history.length > 20) { history.shift(); }
+            if (history.length > 30) { history.shift(); }
             updateControlButtons();
         }
         
@@ -372,24 +442,53 @@
             render();
         }
 
-        window.addBonus = function(points, label) {
+        function handleBonusClick(points, label, bonusId) {
             saveHistory();
-            actionLog.push({ type: 'bonus', value: points, label: label });
+            actionLog.push({ type: 'bonus', value: points, label: label, bonusId: bonusId });
             render();
         }
 
         function render() {
             renderCups();
+            renderTrunkButton();
             calculateAndRenderLog();
             updateControlButtons();
+        }
+
+        function renderTrunkButton() {
+            trunkContainer.innerHTML = '';
+            
+            // 計算點擊次數
+            let count = 0;
+            actionLog.forEach(action => {
+                if (action.type === 'bonus' && action.bonusId === trunkConfig.id) {
+                    count++;
+                }
+            });
+
+            const btn = document.createElement('button');
+            btn.className = 'trunk-btn';
+            
+            const badgeHtml = count > 0 ? `<span class="hit-count" style="top: -8px; right: -8px; bottom: auto;">${count}</span>` : '';
+
+            btn.innerHTML = `${trunkConfig.text} ${badgeHtml}`;
+            btn.onclick = () => handleBonusClick(trunkConfig.points, trunkConfig.label, trunkConfig.id);
+            trunkContainer.appendChild(btn);
         }
 
         function renderCups() {
             cupContainer.innerHTML = '';
             const hitCounts = {};
+            let totalCupHits = 0; 
+
             actionLog.forEach(action => {
-                if(action.type === 'cup') hitCounts[action.id] = (hitCounts[action.id] || 0) + 1;
+                if(action.type === 'cup') {
+                    hitCounts[action.id] = (hitCounts[action.id] || 0) + 1;
+                    totalCupHits++;
+                }
             });
+
+            totalHitsDisplay.textContent = totalCupHits;
 
             const cupsByRow = {};
             initialCupData.forEach(c => {
@@ -429,7 +528,7 @@
             });
         }
 
-        // --- 核心運算：全域狀態運算邏輯 ---
+        // --- 核心運算 ---
         function calculateAndRenderLog() {
             let displayItems = []; 
             
@@ -450,31 +549,31 @@
                 if (action.type === 'cup') {
                     const cup = initialCupData.find(c => c.id === action.id);
                     if (cup.id === 'devil') {
-                        item.desc = `😈 (-30)`;
-                        item.value = -30;
+                        item.desc = `😈`; 
+                        item.value = -3;
                         devilIndices.push(idx);
                     } else if (cup.id === 'bomb') {
-                        item.desc = `💣 待定`; 
+                        item.desc = `💣`; 
                         item.value = 0;
                         bombIndices.push(idx);
                     } else {
-                        item.desc = `${cup.content} (${cup.baseScore})`;
+                        item.desc = `${cup.content}`;
                         item.value = cup.baseScore;
                     }
                 } else if (action.type === 'bonus') {
-                    item.desc = `🔠 ${action.label} (${action.value})`;
+                    item.desc = `🔠 ${action.label}`;
                     item.value = action.value;
                 }
                 displayItems.push(item);
             });
 
-            // 2. 處理組合 (不論順序)
+            // 2. 處理組合
             const comboCount = Math.min(devilIndices.length, bombIndices.length);
             for (let i = 0; i < comboCount; i++) {
                 const dIdx = devilIndices[i];
                 const bIdx = bombIndices[i];
                 displayItems[dIdx].isCancelled = true;
-                displayItems[bIdx].value = 200;
+                displayItems[bIdx].value = 20; 
                 displayItems[bIdx].desc = `😈+💣 組合`;
                 displayItems[bIdx].isCombo = true;
             }
@@ -484,11 +583,10 @@
             const excessBombIndices = bombIndices.slice(comboCount);
 
             excessBombIndices.forEach(bLogIdx => {
-                // 找出候選人：未被劃掉、分數大於0、且不是加分按鈕
                 let candidates = displayItems.filter(item => 
                     !item.isCancelled && 
                     item.value > 0 && 
-                    item.type !== 'bonus' // 修正：組字分數不受炸彈影響
+                    item.type !== 'bonus' 
                 );
                 
                 if (candidates.length > 0) {
@@ -496,13 +594,13 @@
                     const target = candidates[0];
                     target.isCancelled = true;
                     
-                    let targetName = target.desc.split(' ')[0]; 
+                    let targetName = target.desc; 
                     if (target.isCombo) targetName = "組合分";
                     
                     displayItems[bLogIdx].desc = `💣 抵銷 ${targetName}`;
                     displayItems[bLogIdx].isBombDeduction = true;
                 } else {
-                    displayItems[bLogIdx].desc = `💣 (無分可扣)`;
+                    displayItems[bLogIdx].desc = `💣 無分可扣`;
                 }
             });
 
@@ -511,14 +609,14 @@
             displayItems.forEach(item => {
                 if (!item.isCancelled) total += item.value;
             });
-            // 修正：移除了 Math.max(0, total)，允許負分顯示
 
             // 渲染
             calcLogEl.innerHTML = '';
-            const renderList = [...displayItems].reverse();
+            // 修改：不使用 reverse()，保持新的在下面
+            const renderList = [...displayItems]; 
 
             if (renderList.length === 0) {
-                calcLogEl.innerHTML = '<div class="text-center text-gray-400 mt-10">尚無紀錄</div>';
+                calcLogEl.innerHTML = '<div class="text-center text-white/50 mt-10 font-medium text-sm">點擊杯子開始計分</div>';
             } else {
                 renderList.forEach(item => {
                     const row = document.createElement('div');
@@ -542,6 +640,8 @@
                     `;
                     calcLogEl.appendChild(row);
                 });
+                // 修改：自動捲動到底部
+                calcLogEl.scrollTop = calcLogEl.scrollHeight;
             }
 
             // 更新總分
@@ -553,29 +653,50 @@
         window.onload = () => {
             initializeState();
             
-            const modal = document.getElementById('rule-modal');
+            // 規則 Modal
+            const ruleModal = document.getElementById('rule-modal');
             document.getElementById('rule-pin-button').onclick = () => {
-                modal.classList.remove('hidden');
-                modal.style.display = 'flex';
+                ruleModal.classList.remove('hidden');
             };
             document.getElementById('close-modal').onclick = () => {
-                modal.classList.add('hidden');
-                modal.style.display = 'none';
+                ruleModal.classList.add('hidden');
             };
-            modal.onclick = (e) => { 
-                if(e.target === modal) {
-                    modal.classList.add('hidden');
-                    modal.style.display = 'none';
+            ruleModal.onclick = (e) => { 
+                if(e.target === ruleModal) {
+                    ruleModal.classList.add('hidden');
                 }
             };
 
-            document.getElementById('clear-button').onclick = () => {
+            // 確認清空 Modal
+            const confirmModal = document.getElementById('confirm-modal');
+            const clearButton = document.getElementById('clear-button');
+            const cancelClearBtn = document.getElementById('cancel-clear-btn');
+            const confirmClearBtn = document.getElementById('confirm-clear-btn');
+
+            clearButton.onclick = () => {
                 if(actionLog.length > 0) {
-                    saveHistory(); 
-                    actionLog = [];
-                    render();
+                    confirmModal.classList.remove('hidden');
                 }
             };
+
+            cancelClearBtn.onclick = () => {
+                confirmModal.classList.add('hidden');
+            };
+
+            confirmClearBtn.onclick = () => {
+                saveHistory(); 
+                actionLog = [];
+                render();
+                confirmModal.classList.add('hidden');
+            };
+
+            // 點擊 Modal 外部關閉
+            confirmModal.onclick = (e) => {
+                if(e.target === confirmModal) {
+                    confirmModal.classList.add('hidden');
+                }
+            };
+
             document.getElementById('undo-button').onclick = undoLastAction;
         };
     </script>
