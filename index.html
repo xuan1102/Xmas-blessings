@@ -68,9 +68,9 @@
         /* 直式算式區塊 */
         #calculation-log {
             position: fixed;
-            top: 80px;
+            top: 160px;
             right: 10px;
-            width: 220px; /* 修改：縮短寬度 (原本260px) */
+            width: 180px; /* 修改：縮短寬度 (原本260px) */
             max-height: calc(100vh - 400px);
             overflow-y: auto;
             pointer-events: none;
@@ -202,7 +202,7 @@
             width: 100%;
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
-            padding: 20px 20px 35px 20px;
+            padding: 60px 100px 60px 100px;
             z-index: 50;
             border-top: 6px solid #a00000;
             display: flex;
@@ -219,7 +219,7 @@
             transition: all 0.2s;
             font-weight: 700;
             font-size: 16px;
-            background-color: #f3f4f6;
+            background-color: #e6e6e6;
             color: #4b5563;
             height: 50px;
         }
@@ -264,8 +264,8 @@
 <body class="p-4">
 
     <!-- 規則按鈕 -->
-    <button id="rule-pin-button" class="p-3 bg-white text-gray-700 rounded-full hover:bg-gray-100 transition shadow-lg border border-gray-100">
-        <span class="material-symbols-outlined" style="color: #a00000;">attach_file</span>
+    <button id="rule-pin-button" class="p-3 bg-white text-gray-700 rounded-xl hover:bg-gray-100 transition shadow-lg border border-gray-100 mt-4">
+        <span class="material-symbols-outlined mt-1" style="color: #a00000;">attach_file</span>
     </button>
     
     <!-- 規則 Modal -->
@@ -277,12 +277,12 @@
             </div>
             <div id="rule-content" class="text-gray-700 space-y-3 max-h-96 overflow-y-auto text-sm">
                 
-                    <h3>你是一位<strong>煉字術師</strong>，除了要精準的在X球內盡可能投進愈多部件、利用部件組字，還必須滿足客戶的需求⋯⋯</h3>
-                    <h3>請各位<strong>字球多符！</strong></h3>
+                    <h3>你是一位<strong>煉字術師</strong>，除了要精準的在９球內盡可能投進愈多部件、利用部件組字，還必須滿足客戶的需求⋯⋯</h3>
+                    <h2>請各位<strong>字球多符！</strong></h2>
                 <p class="font-semibold text-[#a00000]">遊戲流程</p>
                             
                 <ul class="list-disc pl-2 space-y-1">
-                <h3>1. 開始投球<br>2. 投完一半球數後，抽取一張客戶意見卡<br>3. 依照客戶意見，投完剩下的球<br>4. 利用投進的部件，在小白板上組成字<br>5. 結算分數</h3></ul>
+                <h3>1. 投３球 🌕🌕🌕<br>2. 抽取一張客戶意見卡<br>3. 再投３球 🌕🌕🌕<br>4. 抽取一張客戶意見卡<br>5. 投完剩餘的球 🌕🌕🌕<br>6. 利用投進的部件，在小白板上組成字<br>7. 結算分數</h3></ul>
                 <p class="font-semibold text-[#a00000]">計分規則</p>
                 <ul class="list-disc pl-5 space-y-1">
                     <li>每排分數如左側標示。</li>
@@ -300,7 +300,7 @@
                     </li>
                     <li>🔠 <strong>組字</strong>
                         <ul class="pl-4 mt-1 border-l-2 border-red-100">
-                            <li><strong>+10</strong> (樹幹按鈕)</li>
+                            <li><strong>+10</strong></li>
                         </ul>
                     </li>
                 </ul>
@@ -324,7 +324,7 @@
     </div>
 
     <!-- 標題 -->
-    <div class="text-center mb-6 mt-2">
+    <div class="text-center mb-10 mt-6">
         <h1 class="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg mb-2">字球多符</h1>
         <p class="text-white/80 font-medium">計分小幫手</p>
     </div>
@@ -616,7 +616,7 @@
             const renderList = [...displayItems]; 
 
             if (renderList.length === 0) {
-                calcLogEl.innerHTML = '<div class="text-center text-white/50 mt-10 font-medium text-sm">點擊杯子開始計分</div>';
+                calcLogEl.innerHTML = '<div class="text-center text-white/50 mt-1 font-medium text-sm">點擊杯子開始計分</div>';
             } else {
                 renderList.forEach(item => {
                     const row = document.createElement('div');
